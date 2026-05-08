@@ -1,0 +1,20 @@
+import { supabase } from "../lib/supabaseClient";
+
+export const GoogleLoginButton = () => {
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    if (error) console.error("Google login error:", error);
+  };
+
+  return (
+    <button onClick={handleGoogleLogin} className="google-login-btn mt-4 w-full flex items-center justify-center gap-2 border border-[var(--border)] rounded-xl py-3 hover:bg-[var(--surface-hover)] transition-colors duration-200">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5"/>
+      Continue with Google
+    </button>
+  );
+};

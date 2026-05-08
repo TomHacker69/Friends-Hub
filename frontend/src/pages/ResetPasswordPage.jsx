@@ -8,7 +8,8 @@ import { useToast } from '../components/Toast';
 
 export default function ResetPasswordPage() {
     const [searchParams] = useSearchParams();
-    const token = searchParams.get('token');
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
     const navigate = useNavigate();
     const toast = useToast();
 
@@ -18,12 +19,7 @@ export default function ResetPasswordPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        if (!token) {
-            toast.error('Invalid link. Redirecting to login...');
-            setTimeout(() => navigate('/login'), 3000);
-        }
-    }, [token, navigate, toast]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,12 +37,12 @@ export default function ResetPasswordPage() {
 
         setLoading(true);
         try {
-            await resetPassword(token, password);
+            await resetPassword(email, otp, password);
             setSuccess(true);
             toast.success('Password reset successfully! 🔒');
             setTimeout(() => navigate('/login'), 3000);
         } catch (err) {
-            const msg = err.response?.data?.message || 'Failed to reset password. Token may be expired.';
+            const msg = err.response?.data?.message || 'Failed to reset password. OTP may be expired.';
             setError(msg);
             toast.error(msg);
         } finally {
@@ -54,7 +50,7 @@ export default function ResetPasswordPage() {
         }
     };
 
-    if (!token) return null;
+    
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
@@ -93,6 +89,28 @@ export default function ResetPasswordPage() {
 
                 {!success && (
                     <form onSubmit={handleSubmit} className="space-y-3.5">
+                        <div>
+                            <label className="text-[11px] font-medium text-[var(--text-secondary)] mb-1 block">Email</label>
+                            <input
+                                type="email"
+                                className="input-field pl-3 text-[13px] mb-3"
+                                placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[11px] font-medium text-[var(--text-secondary)] mb-1 block">OTP</label>
+                            <input
+                                type="text"
+                                className="input-field pl-3 text-[13px] mb-3"
+                                placeholder="123456"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                required
+                            />
+                        </div>
                         <div>
                             <label className="text-[11px] font-medium text-[var(--text-secondary)] mb-1 block">New Password</label>
                             <div className="relative">
@@ -155,3 +173,4 @@ export default function ResetPasswordPage() {
         </div>
     );
 }
+

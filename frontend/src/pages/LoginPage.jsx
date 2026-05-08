@@ -5,6 +5,7 @@ import { Mail, Lock, Sparkles, ArrowRight, Loader } from 'lucide-react';
 import { login } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 
 export default function LoginPage() {
     const { loginUser } = useAuth();
@@ -192,14 +193,25 @@ export default function LoginPage() {
                 )}
 
                 {!isForgotPassword && (
-                    <p className="text-center text-[12px] text-[var(--text-muted)] mt-6">
+                    <>
+                        <div className="flex items-center my-6">
+                            <div className="flex-1 border-t border-[var(--border)]"></div>
+                            <span className="px-3 text-[12px] text-[var(--text-muted)]">OR</span>
+                            <div className="flex-1 border-t border-[var(--border)]"></div>
+                        </div>
+
+                        <GoogleLoginButton />
+
+                        <p className="text-center text-[12px] text-[var(--text-muted)] mt-6">
                         Don&apos;t have an account?{' '}
                         <Link to="/register" className="text-[var(--accent)] hover:underline font-medium">
                             Sign up
                         </Link>
                     </p>
+                    </>
                 )}
             </motion.div>
         </div>
     );
 }
+

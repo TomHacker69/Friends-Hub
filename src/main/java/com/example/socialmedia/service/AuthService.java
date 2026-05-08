@@ -23,6 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.springframework.data.redis.core.RedisTemplate;
+import java.util.Optional;
+import java.util.Random;
+import com.example.socialmedia.entity.Role;
+import com.example.socialmedia.entity.AuthProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.time.Duration;
+import com.example.socialmedia.dto.OAuthRequest;
 
 @Service
 public class AuthService {
@@ -34,6 +42,9 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final ExternalApiService externalApiService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     public AuthService(UserRepository userRepository, UserInfoRepository userInfoRepository,
             PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager,
@@ -136,44 +147,64 @@ public class AuthService {
 
     @Transactional
     public String forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with this email"));
-
-        String rawToken = UUID.randomUUID().toString();
-        String hashedToken = hashToken(rawToken);
-        user.setPasswordResetToken(hashedToken);
-        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
-        userRepository.save(user);
-
-        emailService.sendPasswordResetEmail(email, rawToken);
-
-        return "Password reset link has been sent to your email (Check terminal logs for token in dev mode)";
+        // Find user if want to throw (prompt says "Returns 200 OK (don't reveal if email exists or not)")
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            String otp = String.format("%06d", new Random().nextInt(999999));
+            redisTemplate.opsForValue().set("otp:" + email, otp, Duration.ofMinutes(10));
+            emailService.sendOtpEmail(email, otp);
+        }
+        return "If that email exists, an OTP has been sent.";
     }
 
     @Transactional
-    public String resetPassword(String token, String newPassword) {
-        String hashedIncoming = hashToken(token);
-        User user = userRepository.findByPasswordResetToken(hashedIncoming)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
-
-        if (user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Reset token has expired");
+    public String resetPassword(String email, String otp, String newPassword) {
+        String storedOtp = (String) redisTemplate.opsForValue().get("otp:" + email);
+        if (storedOtp == null || !storedOtp.equals(otp)) {
+            throw new RuntimeException("Invalid or expired OTP");
         }
-
-        // Constant-time comparison
-        String storedHash = user.getPasswordResetToken();
-        if (!MessageDigest.isEqual(
-                storedHash.getBytes(StandardCharsets.UTF_8),
-                hashedIncoming.getBytes(StandardCharsets.UTF_8))) {
-            throw new RuntimeException("Invalid or expired reset token");
-        }
-
+        
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPasswordResetToken(null);
-        user.setResetTokenExpiry(null);
         userRepository.save(user);
-
+        
+        redisTemplate.delete("otp:" + email);
         return "Password reset successfully. You can now login.";
+    }
+
+    public AuthResponse googleLogin(OAuthRequest request) {
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        User user;
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+        } else {
+            user = new User();
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setVerificationStatus(com.example.socialmedia.entity.VerificationStatus.VERIFIED);
+            user.setRole(Role.ROLE_USER);
+            user.setAuthProvider(AuthProvider.GOOGLE);
+            
+            // Slugify name
+            String slugified = request.getName().toLowerCase().replaceAll("[^a-z0-9]", "");
+            user.setUsername(slugified);
+            
+            user = userRepository.save(user);
+
+            UserInfo userInfo = new UserInfo();
+            userInfo.setFirstName(request.getName());
+            userInfo.setUser(user);
+            userInfoRepository.save(userInfo);
+        }
+        
+        var jwtToken = jwtService.generateToken(new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                        user.getRole().name()))),
+                user.getId());
+
+        return AuthResponse.builder().token(jwtToken).build();
     }
 
     public AuthResponse refreshToken(String email) {
@@ -204,3 +235,5 @@ public class AuthService {
         }
     }
 }
+
+

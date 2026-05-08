@@ -45,9 +45,15 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
-        String token = body.get("token");
+        String email = body.get("email");
+        String otp = body.get("otp");
         String newPassword = body.get("newPassword");
-        return ResponseEntity.ok(new MessageResponse(authService.resetPassword(token, newPassword)));
+        return ResponseEntity.ok(new MessageResponse(authService.resetPassword(email, otp, newPassword)));
+    }
+
+    @PostMapping("/oauth/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody com.example.socialmedia.dto.OAuthRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
     }
 
     @PostMapping("/refresh")

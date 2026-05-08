@@ -91,6 +91,23 @@ public class EmailService {
     }
 
     // -------------------------------------------------------------------------
+    // OTP Email
+    // -------------------------------------------------------------------------
+
+    @Async
+    public void sendOtpEmail(String toEmail, String otp) {
+        log.info("Preparing OTP email for {}", toEmail);
+        try {
+            String subject = "Your Password Reset OTP";
+            String textBody = "<p>Your password reset OTP is: <strong>" + otp + "</strong></p><p>This OTP is valid for 10 minutes.</p>";
+            sendHtmlEmail(toEmail, subject, textBody);
+            log.info("OTP email successfully sent to {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send OTP email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Core send method
     // -------------------------------------------------------------------------
 
@@ -312,3 +329,5 @@ public class EmailService {
                    .replace("'", "&#x27;");
     }
 }
+
+

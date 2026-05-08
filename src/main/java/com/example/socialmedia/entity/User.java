@@ -52,6 +52,18 @@ public class User {
     @Column(nullable = false)
     private ProfileVisibility profileVisibility = ProfileVisibility.PUBLIC;
 
+    private String username;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="auth_provider")
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public AuthProvider getAuthProvider() { return authProvider; }
+    public void setAuthProvider(AuthProvider authProvider) { this.authProvider = authProvider; }
+
     // Relationships
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -368,3 +380,4 @@ public class User {
         }
     }
 }
+

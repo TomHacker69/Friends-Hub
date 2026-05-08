@@ -13,6 +13,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/verify" element={<VerifyPage />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 <Route
