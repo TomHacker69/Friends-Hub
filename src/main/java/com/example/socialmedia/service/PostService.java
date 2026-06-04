@@ -29,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -36,6 +39,8 @@ import java.util.List;
 @Slf4j
 @CacheConfig(cacheNames = "posts")
 public class PostService {
+        private static final Logger log =
+        LoggerFactory.getLogger(PostService.class);
 
         private final PostRepository postRepository;
         private final UserRepository userRepository;

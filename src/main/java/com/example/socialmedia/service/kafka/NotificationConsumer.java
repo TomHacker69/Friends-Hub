@@ -14,10 +14,27 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationConsumer {
+        private static final Logger log =
+        LoggerFactory.getLogger(NotificationConsumer.class);
+
+        public NotificationConsumer(
+        NotificationRepository notificationRepository,
+        UserRepository userRepository,
+        SimpMessagingTemplate messagingTemplate,
+        PresenceService presenceService) {
+
+    this.notificationRepository = notificationRepository;
+    this.userRepository = userRepository;
+    this.messagingTemplate = messagingTemplate;
+    this.presenceService = presenceService;
+}
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
