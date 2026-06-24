@@ -1,5 +1,8 @@
 package com.example.socialmedia.service.kafka;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.example.socialmedia.dto.kafka.EmailEvent;
 import com.example.socialmedia.dto.kafka.NotificationEvent;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +19,13 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @Slf4j
 public class EventProducerService {
+    private static final Logger log =
+        LoggerFactory.getLogger(EventProducerService.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    public EventProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     public void sendNotification(NotificationEvent event) {
         // Key = targetUserId string ensures all notifications

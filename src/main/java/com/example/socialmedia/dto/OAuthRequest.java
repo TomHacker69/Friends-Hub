@@ -7,4 +7,6 @@ public class OAuthRequest {
     private String email;
     private String name;
     private String googleId;
+    public String getEmail() { return email; }
+public String getName() { return name; }
 }

@@ -11,7 +11,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PresenceService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
+    public PresenceService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
     private static final String ONLINE_PREFIX = "presence:online:";
     private static final Duration ONLINE_TTL = Duration.ofSeconds(30);
 
@@ -28,15 +31,15 @@ public class PresenceService {
     }
 
     public Set<Long> getOnlineUsers(List<Long> userIds) {
-        List<String> keys = userIds.stream()
-            .map(id -> ONLINE_PREFIX + id)
-            .toList();
-        List<Object> results = redisTemplate.opsForValue().multiGet(keys);
-        Set<Long> online = new HashSet<>();
-        if (results == null) return online;
-        for (int i = 0; i < userIds.size(); i++) {
-            if (results.get(i) != null) online.add(userIds.get(i));
+    Set<Long> online = new HashSet<>();
+
+    for (Long userId : userIds) {
+        if (Boolean.TRUE.equals(
+                redisTemplate.hasKey(ONLINE_PREFIX + userId))) {
+            online.add(userId);
         }
-        return online;
     }
+
+    return online;
+}
 }
