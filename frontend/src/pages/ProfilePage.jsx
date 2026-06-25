@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Users, MapPin, Calendar, Loader, Camera, Grid3X3, Lock, UserPlus, UserCheck, UserX, Network, BarChart2 } from 'lucide-react';
 import NetworkGraph from '../components/NetworkGraph';
 import FriendStats from '../components/FriendStats';
+import ProfileCompletenessBar from '../components/ProfileCompletenessBar';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, getUserProfileById, updateProfile, getFollowers, getFollowing, uploadProfilePic, removeProfilePicture, followUser, unfollowUser } from '../api/users';
 import { getPostsByUser } from '../api/posts';
@@ -314,6 +315,17 @@ export default function ProfilePage() {
                     )}
                 </div>
             </div>
+
+            {/* Profile Completeness — own profile only */}
+            {isOwnProfile && (
+                <div className="px-4 pb-2">
+                    <ProfileCompletenessBar
+                        profile={profile}
+                        postCount={posts.length}
+                        onEditClick={() => navigate('/settings')}
+                    />
+                </div>
+            )}
 
             {/* Content Area */}
             <div className="border-t border-[var(--border-color)]">

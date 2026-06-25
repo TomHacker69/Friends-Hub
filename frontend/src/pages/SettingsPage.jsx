@@ -6,6 +6,7 @@ import { getProfile, updateProfileSettings } from '../api/users';
 import PrivacyToggle from '../components/PrivacyToggle';
 import BlockedUsersList from '../components/BlockedUsersList';
 import FollowRequestsPanel from '../components/FollowRequestsPanel';
+import ProfileCompletenessBar from '../components/ProfileCompletenessBar';
 import { useToast } from '../components/Toast';
 
 const TABS = [
@@ -141,6 +142,8 @@ export default function SettingsPage() {
                             {activeTab === 'profile' && (
                                 <div className="space-y-5">
                                     <h2 className="text-[var(--text-primary)] text-lg font-semibold mb-4">Edit Profile</h2>
+
+                                    <ProfileCompletenessBar profile={profile} />
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <InputField label="First Name" value={form.firstName} onChange={v => setForm(f => ({ ...f, firstName: v }))} />
