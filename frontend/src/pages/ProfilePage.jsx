@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Users, MapPin, Calendar, Loader, Camera, Grid3X3, Lock, UserPlus, UserCheck, UserX, Network, BarChart2 } from 'lucide-react';
+import { Settings, Users, MapPin, Calendar, Loader, Camera, Grid3X3, Lock, UserPlus, UserCheck, UserX, Network, BarChart2, Trophy } from 'lucide-react';
 import NetworkGraph from '../components/NetworkGraph';
 import FriendStats from '../components/FriendStats';
 import ProfileCompletenessBar from '../components/ProfileCompletenessBar';
+import FriendshipMilestones from '../components/FriendshipMilestones';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, getUserProfileById, updateProfile, getFollowers, getFollowing, uploadProfilePic, removeProfilePicture, followUser, unfollowUser } from '../api/users';
 import { getPostsByUser } from '../api/posts';
@@ -332,10 +333,13 @@ export default function ProfilePage() {
                 {profile?.canViewPosts && (
                     <div className="flex items-center justify-center gap-6 py-2">
                         {[
-                            { id: 'posts',   icon: Grid3X3,   label: 'Posts'   },
-                            { id: 'network', icon: Network,   label: 'Network' },
+                            { id: 'posts',      icon: Grid3X3,   label: 'Posts'      },
+                            { id: 'network',    icon: Network,   label: 'Network'    },
                             ...(!isOwnProfile && profile?.isFollowing
-                                ? [{ id: 'stats', icon: BarChart2, label: 'Stats' }]
+                                ? [
+                                    { id: 'stats',      icon: BarChart2, label: 'Stats'      },
+                                    { id: 'milestones', icon: Trophy,    label: 'Milestones' },
+                                  ]
                                 : []),
                         ].map(({ id, icon: Icon, label }) => (
                             <button
@@ -362,6 +366,8 @@ export default function ProfilePage() {
                             </div>
                         ) : activeTab === 'stats' ? (
                             <FriendStats friendId={profile.userId} />
+                        ) : activeTab === 'milestones' ? (
+                            <FriendshipMilestones friendId={profile.userId} />
                         ) : posts.length === 0 ? (
                             <div className="text-center py-16 px-4">
                                 <div className="w-16 h-16 rounded-full border border-[var(--border-color)] flex items-center justify-center mx-auto mb-3">
