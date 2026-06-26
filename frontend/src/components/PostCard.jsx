@@ -67,15 +67,24 @@ export default function PostCard({ post, currentEmail, currentUserId, onDelete }
         lastTap.current = now;
     };
 
-    const handleDelete = async () => {
-        setDeleting(true);
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/?post=${post.id}`;
+        const shareData = {
+            title: `${post.authorName} on Friends-Hub`,
+            text: post.content || 'Check out this post on Friends-Hub',
+            url: shareUrl,
+        };
         try {
-            await deletePost(post.id);
-            toast.success('Post deleted');
-            onDelete?.(post.id);
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Link copied to clipboard');
+            }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to delete');
-            setDeleting(false);
+            if (err.name !== 'AbortError') {
+                toast.error('Failed to share post');
+            }
         }
     };
 
