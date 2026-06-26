@@ -128,7 +128,7 @@ export default function HomePage() {
                     loading={loadingMore}
                 >
                     {posts.map((post) => (
-                        <PostCard key={post.id} post={post} currentEmail={user?.email} onDelete={handleDelete} />
+                        <PostCard key={post.id} post={post} currentEmail={user?.email} currentUserId={user?.id} onDelete={handleDelete} />
                     ))}
                 </InfiniteScrollWrapper>
             )}

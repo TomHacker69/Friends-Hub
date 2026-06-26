@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Trash2, MoreHorizontal, Share2, Bookmark, Send } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, MoreHorizontal, Bookmark, Send } from 'lucide-react';
 import { toggleLike, deletePost } from '../api/posts';
 import { useToast } from './Toast';
 import CommentSection from './CommentSection';
@@ -23,7 +23,7 @@ function timeAgo(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function PostCard({ post, currentEmail, onDelete }) {
+export default function PostCard({ post, currentEmail, currentUserId, onDelete }) {
     const [liked, setLiked] = useState(post.isLiked ?? post.likedByCurrentUser ?? false);
     const [likeCount, setLikeCount] = useState(post.likeCount || 0);
     const [showComments, setShowComments] = useState(false);
@@ -37,9 +37,10 @@ export default function PostCard({ post, currentEmail, onDelete }) {
 
     const initial = post.authorName?.charAt(0)?.toUpperCase() || '?';
     const profilePic = post.authorProfilePic || post.profilePicUrl;
+    const isOwner = currentUserId != null && String(post.authorId ?? post.userId) === String(currentUserId);
 
     const handleLike = async () => {
-        const wasLiked = liked; // capture current value before any state update
+        const wasLiked = liked;
         setLiked(!wasLiked);
         setLikeCount((c) => (wasLiked ? c - 1 : c + 1));
         if (!wasLiked) {
@@ -49,14 +50,12 @@ export default function PostCard({ post, currentEmail, onDelete }) {
         try {
             await toggleLike(post.id);
         } catch {
-            // rollback using captured snapshot
             setLiked(wasLiked);
             setLikeCount((c) => (wasLiked ? c + 1 : c - 1));
             toast.error('Failed to update like');
         }
     };
 
-    // Double-tap to like (Instagram-style)
     const handleDoubleTap = () => {
         const now = Date.now();
         if (now - lastTap.current < 300) {
@@ -77,6 +76,27 @@ export default function PostCard({ post, currentEmail, onDelete }) {
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to delete');
             setDeleting(false);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/?post=${post.id}`;
+        const shareData = {
+            title: `${post.authorName} on Friends-Hub`,
+            text: post.content || 'Check out this post on Friends-Hub',
+            url: shareUrl,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Link copied to clipboard');
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                toast.error('Failed to share post');
+            }
         }
     };
 
@@ -104,32 +124,34 @@ export default function PostCard({ post, currentEmail, onDelete }) {
                         <p className="text-[11px] text-[var(--text-muted)]">{timeAgo(post.createdAt)}</p>
                     </div>
                 </Link>
-                <div className="relative">
-                    <button onClick={() => setShowMenu(!showMenu)} className="btn-icon w-8 h-8">
-                        <MoreHorizontal size={18} className="text-[var(--text-secondary)]" />
-                    </button>
-                    <AnimatePresence>
-                        {showMenu && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="absolute right-0 mt-1 bg-[var(--bg-elevated)] border border-[var(--border-color)] rounded-xl p-1 min-w-[140px] z-20 shadow-xl"
-                                >
-                                    <button
-                                        onClick={() => { handleDelete(); setShowMenu(false); }}
-                                        disabled={deleting}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                {isOwner && (
+                    <div className="relative">
+                        <button onClick={() => setShowMenu(!showMenu)} className="btn-icon w-8 h-8">
+                            <MoreHorizontal size={18} className="text-[var(--text-secondary)]" />
+                        </button>
+                        <AnimatePresence>
+                            {showMenu && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        className="absolute right-0 mt-1 bg-[var(--bg-elevated)] border border-[var(--border-color)] rounded-xl p-1 min-w-[140px] z-20 shadow-xl"
                                     >
-                                        <Trash2 size={13} /> {deleting ? 'Deleting...' : 'Delete'}
-                                    </button>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
-                </div>
+                                        <button
+                                            onClick={() => { handleDelete(); setShowMenu(false); }}
+                                            disabled={deleting}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg cursor-pointer disabled:opacity-50 transition-colors"
+                                        >
+                                            <Trash2 size={13} /> {deleting ? 'Deleting...' : 'Delete'}
+                                        </button>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
             </div>
 
             {/* Content text (before image, like IG captions can be before or after) */}
@@ -182,7 +204,7 @@ export default function PostCard({ post, currentEmail, onDelete }) {
                     <button onClick={() => setShowComments(!showComments)} className="p-1 cursor-pointer">
                         <MessageCircle size={24} className={`transition-colors ${showComments ? 'text-[var(--accent)]' : 'text-[var(--text-primary)] hover:text-[var(--text-muted)]'}`} />
                     </button>
-                    <button className="p-1 cursor-pointer">
+                    <button onClick={handleShare} className="p-1 cursor-pointer">
                         <Send size={22} className="text-[var(--text-primary)] hover:text-[var(--text-muted)] transition-colors -rotate-12" />
                     </button>
                     <EmojiReactionPicker targetType="POST" targetId={post.id} />
