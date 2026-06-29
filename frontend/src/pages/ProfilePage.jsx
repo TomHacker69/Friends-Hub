@@ -7,6 +7,7 @@ import FriendStats from '../components/FriendStats';
 import ProfileCompletenessBar from '../components/ProfileCompletenessBar';
 import FriendshipMilestones from '../components/FriendshipMilestones';
 import MutualFriendsPanel from '../components/MutualFriendsPanel';
+import CompatibilityScore from '../components/CompatibilityScore';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, getUserProfileById, updateProfile, getFollowers, getFollowing, uploadProfilePic, removeProfilePicture, followUser, unfollowUser } from '../api/users';
 import { getPostsByUser } from '../api/posts';
@@ -334,6 +335,13 @@ export default function ProfilePage() {
                         postCount={posts.length}
                         onEditClick={() => navigate('/settings')}
                     />
+                </div>
+            )}
+
+            {/* Compatibility Score — other users' profiles only */}
+            {!isOwnProfile && (
+                <div className="px-4 pb-4">
+                    <CompatibilityScore targetUserId={profile?.userId} />
                 </div>
             )}
 
